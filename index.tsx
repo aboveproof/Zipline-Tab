@@ -593,12 +593,12 @@ export default definePlugin({
             find: "#{intl::EXPRESSION_PICKER_CATEGORIES_A11Y_LABEL}",
             replacement: [
                 {
-                    match: /\(0,\i\.jsx\)\((\i),[^}]{20,40}?"aria-selected":(\i)[^}]{50,100}?#{intl::EXPRESSION_PICKER_GIF}\)\}\)/,
-                    replace: "$&,$self.renderZiplineTab($1,$2)"
+                    match: /(children:\[[^[\]]{0,300},)(?=\i&&\i&&\(0,\i\.jsx\)\((\i),\{id:\i\.\i,"aria-controls":\i\.\i,"aria-selected":(\i)===\i\.\i\.SOUNDBOARD)/,
+                    replace: "$1$self.renderZiplineTab($2,$3),"
                 },
                 {
-                    match: /\{onSelectGIF:(\i),[^}]{20,40}\}\):null,(?=(\i)===)/,
-                    replace: "$&$self.renderZiplinePicker($2,$1),"
+                    match: /(\i)===\i\.\i\.GIF&&\i\?\(0,\i\.jsx\)\(\i(?:\.\i)?,\{onSelectGIF:(\i),hideFavorites:\i,persistSearch:!0\}\):null,/,
+                    replace: '$&$1==="zipline"?$self.renderZiplinePicker($2):null,'
                 }
             ]
         }
@@ -627,8 +627,7 @@ export default definePlugin({
         );
     },
 
-    renderZiplinePicker(activeView: string, onSelectGIF: (item: { url: string; }) => void) {
-        if (activeView !== "zipline") return null;
+    renderZiplinePicker(onSelectGIF: (item: { url: string; }) => void) {
         const { serviceUrl, ziplineToken } = getEffectiveConfig();
         return <ZiplinePicker onSelectItem={onSelectGIF} serviceUrl={serviceUrl} token={ziplineToken} />;
     }

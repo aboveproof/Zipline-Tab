@@ -139,31 +139,45 @@ function getInjectScript(token?: string): string {
 
     const reportTitle = () => {
         try {
-            const logo = document.querySelector('img[alt="Zipline logo"]');
-            const header = document.querySelector("header");
+            const logo = document.querySelector('img[alt="Zipline logo"]') ||
+                         document.querySelector('header img') ||
+                         document.querySelector('[class*="Avatar"] img');
+            const avatar = logo?.closest('[class*="Avatar"]') || logo?.parentElement;
             let titleEl = null;
+
+            if (avatar?.nextElementSibling?.textContent?.trim()) {
+                titleEl = avatar.nextElementSibling;
+            } else {
+                titleEl = document.querySelector('header h1, header h2, header h3, [class*="Title"]');
+            }
+
+            let centerY = 0;
+            let right = 0;
+
             if (logo) {
-                let sibling = logo.nextElementSibling;
-                while (sibling) {
-                    if (sibling.textContent && sibling.textContent.trim().length > 0 && sibling.style.marginLeft !== "auto") {
-                        titleEl = sibling;
-                        break;
-                    }
-                    sibling = sibling.nextElementSibling;
+                const lRect = logo.getBoundingClientRect();
+                if (lRect.height > 0) {
+                    centerY = lRect.top + (lRect.height / 2);
+                    right = lRect.right;
                 }
             }
-            if (!titleEl && header) {
-                titleEl = header.querySelector('h1, h2, h3, [class*="Title"], [class*="Text"]');
-            }
+
             if (titleEl) {
-                const rect = titleEl.getBoundingClientRect();
-                if (rect.width > 0 && rect.right > 0) {
-                    window.parent.postMessage({
-                        type: "VC_ZIPLINE_TITLE_RECT",
-                        left: Math.round(rect.right + 12),
-                        top: Math.round(rect.top + (rect.height - 28) / 2)
-                    }, "*");
+                const tRect = titleEl.getBoundingClientRect();
+                if (tRect.height > 0) {
+                    right = tRect.right;
+                    if (!centerY) {
+                        centerY = tRect.top + (tRect.height / 2) + 2;
+                    }
                 }
+            }
+
+            if (right > 0 && centerY > 0) {
+                window.parent.postMessage({
+                    type: "VC_ZIPLINE_TITLE_RECT",
+                    left: Math.round(right + 10),
+                    top: Math.round(centerY - 14)
+                }, "*");
             }
         } catch {}
     };

@@ -15,7 +15,7 @@ import { Devs } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
 import { classes } from "@utils/misc";
 import definePlugin, { OptionType, PluginNative } from "@utils/types";
-import { findByCodeLazy, findComponentByCodeLazy } from "@webpack";
+import { findByCodeLazy, findComponentByCodeLazy, findExportedComponentLazy } from "@webpack";
 import { Menu, NavigationRouter, SelectedChannelStore, showToast, Toasts, Tooltip, useEffect, useState, useStateFromStores } from "@webpack/common";
 import gradientIconBase64 from "file://./asset/zipline-gradient.png?base64";
 import grayscaleIconBase64 from "file://./asset/zipline-grayscale.png?base64";
@@ -340,11 +340,7 @@ const ZiplinePage = ErrorBoundary.wrap(function ZiplinePage() {
     );
 }, { noop: true });
 
-const GuildlessServerListItemComponent = findComponentByCodeLazy(
-    "showPill:",
-    '"string"==typeof ',
-    "lowerBadgeSize:"
-);
+const GuildlessServerListItemComponent = findExportedComponentLazy("GuildlessServerListItemComponent");
 const ServerListItemPillComponent = findComponentByCodeLazy("=!1,hovered:", "=!1,unread:", "=!1,disabled:");
 
 const ZiplineGuildButton = ErrorBoundary.wrap(function ZiplineGuildButton() {
@@ -565,6 +561,14 @@ export default definePlugin({
     },
 
     patches: [
+        {
+            find: '="DOWNLOAD_APPS";function',
+            replacement: {
+                match: /(\{A:\(\)=>\i\})(.{0,25000}?let )(\i)(=function\(\i\)\{let\{ref:\i,\.\.\.\i\}=\i,\{id:\i,onClick:\i,onContextMenu:\i,icon:\i,selected:\i,tooltip:\i,upperBadge:\i,lowerBadge:\i,lowerBadgeSize:\i,showPill:\i)/,
+                replace: (m, exportMap, gap, compName, tail) =>
+                    `${exportMap.slice(0, -1)},GuildlessServerListItemComponent:()=>${compName}}${gap}${compName}${tail}`
+            }
+        },
         {
             find: '"section-divider-top"',
             replacement: {

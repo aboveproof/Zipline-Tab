@@ -15,13 +15,13 @@ import { Devs } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
 import { classes } from "@utils/misc";
 import definePlugin, { OptionType, PluginNative } from "@utils/types";
-import { findByCodeLazy, findComponentByCodeLazy, findExportedComponentLazy } from "@webpack";
+import { findByCodeLazy, findComponentByCodeLazy } from "@webpack";
 import { Menu, NavigationRouter, SelectedChannelStore, showToast, Toasts, Tooltip, useEffect, useState, useStateFromStores } from "@webpack/common";
+import gradientIconBase64 from "file://./asset/zipline-gradient.png?base64";
+import grayscaleIconBase64 from "file://./asset/zipline-grayscale.png?base64";
 import type { ComponentType, MouseEvent, ReactElement, ReactNode } from "react";
 
 import { ZiplinePicker } from "./ZiplinePicker";
-import grayscaleIconBase64 from "file://./asset/zipline-grayscale.png?base64";
-import gradientIconBase64 from "file://./asset/zipline-gradient.png?base64";
 
 const GRAYSCALE_ICON = `data:image/png;base64,${grayscaleIconBase64}`;
 const GRADIENT_ICON = `data:image/png;base64,${gradientIconBase64}`;
@@ -340,7 +340,11 @@ const ZiplinePage = ErrorBoundary.wrap(function ZiplinePage() {
     );
 }, { noop: true });
 
-const GuildlessServerListItemComponent = findExportedComponentLazy("GuildlessServerListItemComponent");
+const GuildlessServerListItemComponent = findComponentByCodeLazy(
+    "showPill:",
+    '"string"==typeof ',
+    "lowerBadgeSize:"
+);
 const ServerListItemPillComponent = findComponentByCodeLazy("=!1,hovered:", "=!1,unread:", "=!1,disabled:");
 
 const ZiplineGuildButton = ErrorBoundary.wrap(function ZiplineGuildButton() {
@@ -467,7 +471,7 @@ function getMediaSource(props: Record<string, unknown> | undefined): string | nu
         if (Array.isArray(message.embeds)) {
             for (const embed of message.embeds) {
                 const img = embed.image || embed.thumbnail;
-                const video = embed.video;
+                const { video } = embed;
                 const url = img?.proxyURL || img?.url || video?.proxyURL || video?.url;
                 if (typeof url === "string" && /^https?:\/\//i.test(url)) return url;
             }
@@ -479,7 +483,7 @@ function getMediaSource(props: Record<string, unknown> | undefined): string | nu
 
 async function uploadToZipline(sourceUrl: string) {
     const { serviceUrl, ziplineToken, folderId } = getEffectiveConfig();
-    const autoCopy = settings.store.autoCopy;
+    const { autoCopy } = settings.store;
 
     if (!serviceUrl || !ziplineToken) {
         showToast("Configure Zipline Server URL and API Token in settings first.", Toasts.Type.FAILURE);
@@ -562,13 +566,6 @@ export default definePlugin({
 
     patches: [
         {
-            find: '="DOWNLOAD_APPS";function',
-            replacement: {
-                match: /(?<!GuildlessServerListItemComponent:\(\)=>\i,)(?=\i:\(\)=>\i.{0,30000}?asContainer:!\i.{0,100};let (\i)=(?:\i\.forwardRef\()?function\()/,
-                replace: "GuildlessServerListItemComponent:()=>$1,"
-            }
-        },
-        {
             find: '"section-divider-top"',
             replacement: {
                 match: /\(0,\i\.jsx\)\(\i,\{\},"section-divider-top"\)/,
@@ -642,4 +639,3 @@ interface ExpressionPickerTabProps {
     viewType: string;
     children?: ReactNode;
 }
-
